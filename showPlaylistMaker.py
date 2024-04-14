@@ -2,23 +2,24 @@ import sqlite3
 import os
 import re
 import shutil
+import ffmpeg
 
 # DB table information
-# showInformation(name, episodesPerRun, folderLocation, position)
+# showInformation(name, episodesPerRun, folderLocation, position, audio, video)
 # show(episodes)
 # previousMain(fileNumber)
 # previousShow(show, episode, id)
 
 
-def addShow(name, folderLocation, episodesPerRun):
+def addShow(name, folderLocation, episodesPerRun, audio, video):
     connection = sqlite3.connect("shows.db")
     cursor = connection.cursor()
     cursor.execute(
-        "CREATE TABLE IF NOT EXISTS showInformation(name, episodesPerRun, folderLocation, position)"
+        "CREATE TABLE IF NOT EXISTS showInformation(name, episodesPerRun, folderLocation, position, audio, video)"
     )
-    values = (name, folderLocation, episodesPerRun)
+    values = (name, episodesPerRun, folderLocation, audio, video)
     cursor.execute(
-        f"INSERT INTO showInformation(name, folderLocation, episodesPerRun) VALUES {values}",
+        f"INSERT INTO showInformation(name, episodesPerRun, folderLocation, audio, video) VALUES {values}",
     )
     cursor.execute(f"CREATE TABLE '{name}'(episodes)")
     seasons = list(
@@ -155,6 +156,17 @@ def changeEpisodePerRun(showName, episodesPerRun):
     return True
 
 
+def changeTranscode(showName, audio, video):
+    connection = sqlite3.connect("shows.db")
+    cursor = connection.cursor()
+    cursor.execute(
+        f"UPDATE showInformation SET audio = '{audio}', video = '{video}' WHERE name = '{showName}'"
+    )
+    connection.commit()
+    connection.close()
+    return True
+
+
 def changeShowPosition(showName, position):
     connection = sqlite3.connect("shows.db")
     cursor = connection.cursor()
@@ -236,3 +248,13 @@ def createShowOrder(orderLength):
 
 def copyShow(showName, episodeLocation, episode, fileNumber, destination):
     shutil.copy(episodeLocation, f"{destination}/{fileNumber} - {showName} {episode}")
+
+
+def transcodeShow(
+    showName, episodeLocation, episode, fileNumber, destination, audio, video
+):
+    ffmpeg.input(episodeLocation).output(
+        f"{destination}/{fileNumber} - {showName} {episode}",
+        acodec=audio,
+        vcodec=video,
+    ).run()

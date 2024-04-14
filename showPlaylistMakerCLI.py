@@ -64,12 +64,36 @@ def addShowCLI():
             print("Please input a integer")
             continue
         break
-    result = addShow(showName, folderLocation, episodesPerRun)
+    while True:
+        audioTranscode = input("Do you want to transcode the audio [y/n]: ")
+        if audioTranscode == "y":
+            audioTranscode = "aac"
+            break
+        elif audioTranscode == "n":
+            audioTranscode = "copy"
+            break
+        else:
+            print("Please input y or n")
+    while True:
+        videoTranscode = input("Do you want to transcode the video [y/n]: ")
+        if videoTranscode == "y":
+            videoTranscode = "h264"
+            break
+        elif videoTranscode == "n":
+            videoTranscode = "copy"
+            break
+        else:
+            print("Please input y or n")
+    result = addShow(
+        showName, folderLocation, episodesPerRun, audioTranscode, videoTranscode
+    )
     if result[0]:
         print("")
         print("The show was added succesfully, but to confirm here is the information")
         print(f"Name: {showName}")
         print(f"Episodes per cycle: {episodesPerRun}")
+        print(f"Audio transcode: {audioTranscode}")
+        print(f"Video transcode: {videoTranscode}")
         print(f"Seasons: {result[1]}")
         print(f"Episodes: {result[2]}")
         print("")
@@ -110,6 +134,7 @@ def editShowCLI():
     print("2) Folder location")
     print("3) Episodes per cycle")
     print("4) Rescan episodes")
+    print("5) Transcode settings")
     print("----------------------")
     print("")
     while True:
@@ -174,12 +199,39 @@ def editShowCLI():
         result = changeEpisodePerRun(shows[showSelection - 1], newEpisodesPerRun)
         if result:
             print(f"{shows[showSelection - 1]} now has {newEpisodesPerRun} per session")
+            mainMenu()
     elif editSelection == 4:
         showInformation = getShowInformation(shows[showSelection - 1])
         results = changeShowFolder(shows[showSelection - 1], showInformation[2])
         if results[0]:
             print(
                 f"{shows[showSelection - 1]} now has {results[1]} seasons and {results[2]} episodes"
+            )
+            mainMenu()
+    elif editSelection == 5:
+        while True:
+            audioTranscode = input("Do you want to transcode the audio [y/n]: ")
+            if audioTranscode == "y":
+                audioTranscode = "aac"
+                break
+            elif audioTranscode == "n":
+                audioTranscode = "copy"
+                break
+            else:
+                print("Please input y or n")
+        while True:
+            videoTranscode = input("Do you want to transcode the video [y/n]: ")
+            if videoTranscode == "y":
+                videoTranscode = "h264"
+                break
+            elif videoTranscode == "n":
+                videoTranscode = "copy"
+                break
+            else:
+                print("Please input y or n")
+        if changeTranscode(shows[showSelection - 1], audioTranscode, videoTranscode):
+            print(
+                f"{shows[showSelection - 1]} now transcodes audio to {audioTranscode} and video to {videoTranscode}"
             )
             mainMenu()
 
@@ -228,6 +280,8 @@ def getShowsCLI():
         print(f"  Episodes per cycle: {showInformation[1]}")
         print(f"  Folder location: {showInformation[2]}")
         print(f"  Show position: {showInformation[3]}")
+        print(f"  Audio transcode: {showInformation[4]}")
+        print(f"  Video transcode: {showInformation[5]}")
         print(f"  Episodes: {episodeCount[0]}")
         print(f"  Seasons: {episodeCount[1]}")
         print("")
@@ -314,15 +368,27 @@ def createPlaylistCLI():
     for episode in playlist:
         showLocation = getShowInformation(episode[0])[2]
         season = re.search(r"S(\d+)", episode[1]).group(1)
+        transcodeSettings = getShowInformation(episode[0])[4:6]
         if os.path.exists(f"{showLocation}/Season {season}/{episode[1]}"):
             print(f"Copying {episode[1]} from {episode[0]}")
-            copyShow(
-                episode[0],
-                f"{showLocation}/Season {season}/{episode[1]}",
-                episode[1],
-                fileNumber,
-                folderLocation,
-            )
+            if transcodeSettings == ("copy", "copy"):
+                copyShow(
+                    episode[0],
+                    f"{showLocation}/Season {season}/{episode[1]}",
+                    episode[1],
+                    fileNumber,
+                    folderLocation,
+                )
+            else:
+                transcodeShow(
+                    episode[0],
+                    f"{showLocation}/Season {season}/{episode[1]}",
+                    episode[1],
+                    fileNumber,
+                    folderLocation,
+                    transcodeSettings[0],
+                    transcodeSettings[1],
+                )
             fileNumber += 1
     cursor.execute(f"UPDATE previousMain SET fileNumber = {fileNumber}")
     connection.commit()

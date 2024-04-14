@@ -3,9 +3,13 @@
 This show playlist maker copies files an makes it switch through different shows while still going in order
 
 ## Installation and running
-Simply clone the repo and run showPlaylistMaker.py
+
+1.Install ffmpeg (https://ffmpeg.org/download.html)
+2.Run "pip install ffmpeg-python"
+3.Clone the repo and run showPlaylistMaker.py
 
 ## Storing your files
+
 > Show folder
 > > Show name
 > > > Season 01
