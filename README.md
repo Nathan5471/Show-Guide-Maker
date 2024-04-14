@@ -4,8 +4,8 @@ This show playlist maker copies files an makes it switch through different shows
 
 ## Installation and running
 
-1.Install ffmpeg (https://ffmpeg.org/download.html)
-2.Run "pip install ffmpeg-python"
+1.Install ffmpeg (https://ffmpeg.org/download.html) \
+2.Run "pip install ffmpeg-python" \
 3.Clone the repo and run showPlaylistMaker.py
 
 ## Storing your files
