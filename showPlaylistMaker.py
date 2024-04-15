@@ -259,6 +259,31 @@ def createShowOrder(orderLength):
             continue
 
 
+def storeDriveLocation(driveLocation):
+    connection = sqlite3.connect("shows.db")
+    cursor = connection.cursor()
+    cursor.execute("CREATE TABLE IF NOT EXISTS driveLocation(location)")
+    cursor.execute(f"INSERT INTO driveLocation(location) VALUES ('{driveLocation}')")
+    connection.commit()
+    connection.close()
+    return True
+
+
+def getDriveLocations():
+    connection = sqlite3.connect("shows.db")
+    cursor = connection.cursor()
+    cursor.execute("CREATE TABLE IF NOT EXISTS driveLocation(location)")
+    cursor.execute("SELECT location FROM driveLocation")
+    locations = cursor.fetchall()
+    for location in locations:
+        locationString = str(location).replace("('", "")
+        locationString = locationString.replace("',)", "")
+        locations[locations.index(location)] = locationString
+    connection.commit()
+    connection.close()
+    return locations
+
+
 def copyShow(showName, episodeLocation, episode, fileNumber, destination):
     shutil.copy(episodeLocation, f"{destination}/{fileNumber} - {showName} {episode}")
 

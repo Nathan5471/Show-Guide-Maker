@@ -351,11 +351,45 @@ def createPlaylistCLI():
         break
     playlist = createShowOrder(lengthOfPlaylist)
     while True:
-        folderLocation = input("Enter the folder to copy the playlist to: ")
-        if os.path.exists(folderLocation):
+        driveLocations = getDriveLocations()
+        print("")
+        print("----------------------")
+        for location in driveLocations:
+            print(f"{driveLocations.index(location) + 1}) {location}")
+        print(f"{len(driveLocations) + 1}) Other location")
+        print("----------------------")
+        print("")
+        try:
+            folderLocationSelection = int(
+                input("Enter the folder to copy the playlist to: ")
+            )
+        except ValueError:
+            print("Please input a valid number")
+            continue
+        if folderLocationSelection == len(driveLocations) + 1:
+            while True:
+                folderLocation = input("Enter the folder location: ")
+                if os.path.exists(folderLocation):
+                    storeDriveLocation(folderLocation)
+                    break
+                else:
+                    print(
+                        "Folder location does not exists, please input a valid folder location"
+                    )
+                    continue
             break
+        elif folderLocationSelection - 1 < len(driveLocations):
+            folderLocation = driveLocations[folderLocationSelection - 1]
+            if os.path.exists(folderLocation):
+                break
+            else:
+                print(
+                    "Folder location does not exists, please choose a different folder location"
+                )
+                continue
         else:
-            print("Please print a valid folder location")
+            print("Please input a valid number")
+            continue
     connection = sqlite3.connect("shows.db")
     cursor = connection.cursor()
     cursor.execute(f"SELECT 1 FROM previousMain")
