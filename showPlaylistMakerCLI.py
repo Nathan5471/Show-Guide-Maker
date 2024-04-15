@@ -392,7 +392,7 @@ def createPlaylistCLI():
             continue
     connection = sqlite3.connect("shows.db")
     cursor = connection.cursor()
-    cursor.execute(f"SELECT 1 FROM previousMain")
+    cursor.execute(f"SELECT * FROM previousMain")
     fileNumber = cursor.fetchone()
     if not fileNumber:
         fileNumber = 1
