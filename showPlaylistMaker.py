@@ -25,6 +25,18 @@ def addShow(name, folderLocation, episodesPerRun, audio, video):
     seasons = list(
         filter(lambda item: "Season" in item, os.listdir(f"{folderLocation}"))
     )
+    if "Season 00" in seasons:
+        while True:
+            season0Check = input(
+                "Season 00 found, would you like to remove it? [y/n]: "
+            )
+            if season0Check == "y":
+                seasons.remove("Season 00")
+                break
+            elif season0Check == "n":
+                break
+            else:
+                print("please enter y or n")
     episodesTotal = 0
     for season in seasons:
         episodes = list(
@@ -32,6 +44,7 @@ def addShow(name, folderLocation, episodesPerRun, audio, video):
                 lambda item: "Episode" in item, os.listdir(f"{folderLocation}/{season}")
             )
         )
+
         episodesTotal += len(episodes)
         for episode in episodes:
             cursor.execute(f"INSERT INTO '{name}'(episodes) VALUES ('{episode}')")
