@@ -410,7 +410,7 @@ def createPlaylistCLI():
                     episode[0],
                     f"{showLocation}/Season {season}/{episode[1]}",
                     episode[1],
-                    fileNumber,
+                    f"{'0'*(6-len(str(fileNumber)))}{fileNumber}",
                     folderLocation,
                 )
             else:
@@ -418,7 +418,7 @@ def createPlaylistCLI():
                     episode[0],
                     f"{showLocation}/Season {season}/{episode[1]}",
                     episode[1],
-                    fileNumber,
+                    f"{'0'*(6-len(str(fileNumber)))}{fileNumber}",
                     folderLocation,
                     transcodeSettings[0],
                     transcodeSettings[1],
