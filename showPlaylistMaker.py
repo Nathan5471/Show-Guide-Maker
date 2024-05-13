@@ -138,11 +138,11 @@ def changeShowFolder(showName, newFolderLocation):
     cursor.execute(
         f"UPDATE showInformation Set folderLocation = '{newFolderLocation}' WHERE name = '{showName}'"
     )
-    connection = sqlite3.connect("shows.db")
     seasons = list(
         filter(lambda item: "Season" in item, os.listdir(f"{newFolderLocation}"))
     )
     episodesTotal = 0
+    cursor.execute(f"DELETE FROM '{showName}'")
     for season in seasons:
         episodes = list(
             filter(

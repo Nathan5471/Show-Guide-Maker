@@ -396,7 +396,7 @@ def createPlaylistCLI():
     fileNumber = cursor.fetchone()
     if not fileNumber:
         fileNumber = 1
-        cursor.execute("INSERT INTO previousMAIN(fileNumber) VALUES (1)")
+        cursor.execute("INSERT INTO previousMain(fileNumber) VALUES (1)")
     else:
         fileNumber = fileNumber[0]
     for episode in playlist:
