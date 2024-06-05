@@ -2,7 +2,8 @@ import sqlite3
 import os
 import re
 import shutil
-import ffmpeg
+import subprocess
+import moviepy.editor as mp
 
 # DB table information
 # showInformation(name, episodesPerRun, folderLocation, position, audio, video)
@@ -289,24 +290,31 @@ def copyShow(showName, episodeLocation, episode, fileNumber, destination):
 
 
 def transcodeShow(
-    showName, episodeLocation, episode, fileNumber, destination, audio, video
+    showName,
+    episodeLocation,
+    episode,
+    fileNumber,
+    destination,
+    audio,
+    video,
+    videoBitrate,
 ):
-    ffmpeg.input(episodeLocation).output(
-        f"{destination}/{fileNumber} - {showName} {episode}",
-        acodec=audio,
-        vcodec=video,
-    ).run()
+    subprocess.run(
+        f'ffmpeg -i "{episodeLocation}" -c:v {video} -b:v {videoBitrate} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
+    )
 
 
 def generateSettings():
     connection = sqlite3.connect("shows.db")
     cursor = connection.cursor()
-    cursor.execute("CREATE TABLE IF NOT EXISTS settings(videoCodec, audioCodec)")
+    cursor.execute(
+        "CREATE TABLE IF NOT EXISTS settings(videoCodec, audioCodec, maxBitrate)"
+    )
     cursor.execute("SELECT * FROM settings")
     settings = cursor.fetchall()
     if not settings:
         cursor.execute(
-            "INSERT INTO settings(videoCodec, audioCodec) VALUES ('h264', 'aac')"
+            "INSERT INTO settings(videoCodec, audioCodec, maxBitrate) VALUES ('h264', 'aac', '100M')"
         )
     connection.commit()
     connection.close()
@@ -330,6 +338,15 @@ def editAudioCodec(audioCodec):
     return True
 
 
+def editMaxBitrate(maxBitrate):
+    connection = sqlite3.connect("shows.db")
+    cursor = connection.cursor()
+    cursor.execute(f"UPDATE settings SET maxBitrate = '{maxBitrate}' WHERE ROWID = 1")
+    connection.commit()
+    connection.close()
+    return True
+
+
 def getSettings():
     connection = sqlite3.connect("shows.db")
     cursor = connection.cursor()
@@ -338,3 +355,11 @@ def getSettings():
     connection.commit()
     connection.close()
     return settings[0]
+
+
+def calculateBitrate(videoLocation):
+    video = mp.VideoFileClip(videoLocation)
+    videoLength = video.duration
+    videoSize = os.path.getsize(videoLocation)
+    bitrate = (videoSize * 8 / videoLength) / 1000
+    return bitrate  # Returns in kbps

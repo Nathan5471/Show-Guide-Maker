@@ -409,9 +409,27 @@ def createPlaylistCLI():
         showLocation = getShowInformation(episode[0])[2]
         season = re.search(r"S(\d+)", episode[1]).group(1)
         transcodeSettings = getShowInformation(episode[0])[4:6]
+        preferredVideoCodec, maxBitrate = getSettings()[0], getSettings()[2]
         if os.path.exists(f"{showLocation}/Season {season}/{episode[1]}"):
             print(f"Copying {episode[1]} from {episode[0]}")
-            if transcodeSettings == ("copy", "copy"):
+            bitrate = calculateBitrate(f"{showLocation}/Season {season}/{episode[1]}")
+            number, suffix = float(maxBitrate[:-1]), maxBitrate[-1]
+            if suffix == "M":
+                number = number * 1000
+            elif suffix == "K":
+                number = number
+            if bitrate > number:
+                transcodeShow(
+                    episode[0],
+                    f"{showLocation}/Season {season}/{episode[1]}",
+                    episode[1],
+                    f"{'0'*(6-len(str(fileNumber)))}{fileNumber}",
+                    folderLocation,
+                    transcodeSettings[0],
+                    preferredVideoCodec,
+                    maxBitrate,
+                )
+            elif transcodeSettings == ("copy", "copy"):
                 copyShow(
                     episode[0],
                     f"{showLocation}/Season {season}/{episode[1]}",
@@ -428,6 +446,7 @@ def createPlaylistCLI():
                     folderLocation,
                     transcodeSettings[0],
                     transcodeSettings[1],
+                    maxBitrate,
                 )
             fileNumber += 1
     cursor.execute(f"UPDATE previousMain SET fileNumber = {fileNumber}")
@@ -442,8 +461,9 @@ def settingsCLI():
     print("----------------------")
     print("1) Preferred Video Codec")
     print("2) Preferred Audio Codec")
-    print("3) Get current settings")
-    print("4) Back to main menu")
+    print("3) Max bitrate")
+    print("4) Get current settings")
+    print("5) Back to main menu")
     print("----------------------")
     print("")
     while True:
@@ -497,16 +517,33 @@ def settingsCLI():
             print(f"Audio codec has been changed to {codecs[audioCodecSelection - 1]}")
             settingsCLI()
     elif selection == 3:
+        print("Please input the bitrate in mbps")
+        while True:
+            try:
+                maxBitrate = float(input("Enter the max bitrate: "))
+            except ValueError:
+                print("Please input a valid number")
+                continue
+            break
+        if maxBitrate < 1:
+            maxBitrate = f"{int(maxBitrate*1000)}K"
+        else:
+            maxBitrate = f"{int(maxBitrate)}M"
+        if editMaxBitrate(maxBitrate):
+            print(f"Max bitrate has been changed to {maxBitrate}")
+            settingsCLI()
+    elif selection == 4:
         settings = getSettings()
         print("")
         print("----------------------")
         print(f"Preferred Video Codec: {settings[0]}")
         print(f"Preferred Audio Codec: {settings[1]}")
+        print(f"Max Bitrate: {settings[2]}")
         print("----------------------")
         print("")
         input("Press enter to go back to settings")
         settingsCLI()
-    elif selection == 4:
+    elif selection == 5:
         mainMenu()
     else:
         print("Please input a valid number")
