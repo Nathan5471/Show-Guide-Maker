@@ -12,6 +12,7 @@ def mainMenu():
     print("4) Get shows")
     print("5) Change order")
     print("6) Create playlist")
+    print("7) Settings")
     print("-------------------")
     print("")
 
@@ -39,12 +40,16 @@ def mainMenu():
     elif selection == 6:
         createPlaylistCLI()
 
+    elif selection == 7:
+        settingsCLI()
+
     else:
         print("Please select a valid number")
         mainMenu()
 
 
 def addShowCLI():
+    transcodeSettings = getSettings()
     showName = input("Enter the name of the show you want to add: ")
     while True:
         folderLocation = input("Enter the location of the folder: ")
@@ -67,7 +72,7 @@ def addShowCLI():
     while True:
         audioTranscode = input("Do you want to transcode the audio [y/n]: ")
         if audioTranscode == "y":
-            audioTranscode = "aac"
+            audioTranscode = transcodeSettings[1]
             break
         elif audioTranscode == "n":
             audioTranscode = "copy"
@@ -77,7 +82,7 @@ def addShowCLI():
     while True:
         videoTranscode = input("Do you want to transcode the video [y/n]: ")
         if videoTranscode == "y":
-            videoTranscode = "h264"
+            videoTranscode = transcodeSettings[0]
             break
         elif videoTranscode == "n":
             videoTranscode = "copy"
@@ -104,7 +109,7 @@ def addShowCLI():
                 mainMenu()
             elif informationIsCorrect == "n":
                 removeShow(showName)
-                print("You can try to add the show again, if you would like")
+                print("Show has not been added")
                 mainMenu()
             else:
                 print("Please input y or n")
@@ -209,10 +214,11 @@ def editShowCLI():
             )
             mainMenu()
     elif editSelection == 5:
+        transcodeSettings = getSettings()
         while True:
             audioTranscode = input("Do you want to transcode the audio [y/n]: ")
             if audioTranscode == "y":
-                audioTranscode = "aac"
+                audioTranscode = transcodeSettings[1]
                 break
             elif audioTranscode == "n":
                 audioTranscode = "copy"
@@ -222,7 +228,7 @@ def editShowCLI():
         while True:
             videoTranscode = input("Do you want to transcode the video [y/n]: ")
             if videoTranscode == "y":
-                videoTranscode = "h264"
+                videoTranscode = transcodeSettings[0]
                 break
             elif videoTranscode == "n":
                 videoTranscode = "copy"
@@ -431,4 +437,81 @@ def createPlaylistCLI():
     mainMenu()
 
 
+def settingsCLI():
+    print("")
+    print("----------------------")
+    print("1) Preferred Video Codec")
+    print("2) Preferred Audio Codec")
+    print("3) Get current settings")
+    print("4) Back to main menu")
+    print("----------------------")
+    print("")
+    while True:
+        try:
+            selection = int(input("Enter your selection: "))
+        except ValueError:
+            print("Please input a valid number")
+            continue
+        break
+    if selection == 1:
+        codecs = ["h264", "hevc", "av1"]
+        print("")
+        print("----------------------")
+        print("1) h264")
+        print("2) hevc")
+        print("3) av1")
+        print("----------------------")
+        print("")
+        while True:
+            try:
+                videoCodecSelection = int(input("Enter your selection: "))
+            except ValueError:
+                print("Please input a valid number")
+                continue
+            if videoCodecSelection > 3 or videoCodecSelection < 1:
+                print("Please input a valid number")
+                continue
+            break
+        if editVideoCodec(codecs[videoCodecSelection - 1]):
+            print(f"Video codec has been changed to {codecs[videoCodecSelection - 1]}")
+            settingsCLI()
+    elif selection == 2:
+        codecs = ["aac", "mp3"]
+        print("")
+        print("----------------------")
+        print("1) aac")
+        print("2) mp3")
+        print("----------------------")
+        print("")
+        while True:
+            try:
+                audioCodecSelection = int(input("Enter your selection: "))
+            except ValueError:
+                print("Please input a valid number")
+                continue
+            if audioCodecSelection > 2 or audioCodecSelection < 1:
+                print("Please input a valid number")
+                continue
+            break
+        if editAudioCodec(codecs[audioCodecSelection - 1]):
+            print(f"Audio codec has been changed to {codecs[audioCodecSelection - 1]}")
+            settingsCLI()
+    elif selection == 3:
+        settings = getSettings()
+        print("")
+        print("----------------------")
+        print(f"Preferred Video Codec: {settings[0]}")
+        print(f"Preferred Audio Codec: {settings[1]}")
+        print("----------------------")
+        print("")
+        input("Press enter to go back to settings")
+        settingsCLI()
+    elif selection == 4:
+        mainMenu()
+    else:
+        print("Please input a valid number")
+        settingsCLI()
+
+
+generateSettings()
 mainMenu()

@@ -296,3 +296,45 @@ def transcodeShow(
         acodec=audio,
         vcodec=video,
     ).run()
+
+
+def generateSettings():
+    connection = sqlite3.connect("shows.db")
+    cursor = connection.cursor()
+    cursor.execute("CREATE TABLE IF NOT EXISTS settings(videoCodec, audioCodec)")
+    cursor.execute("SELECT * FROM settings")
+    settings = cursor.fetchall()
+    if not settings:
+        cursor.execute(
+            "INSERT INTO settings(videoCodec, audioCodec) VALUES ('h264', 'aac')"
+        )
+    connection.commit()
+    connection.close()
+
+
+def editVideoCodec(videoCodec):
+    connection = sqlite3.connect("shows.db")
+    cursor = connection.cursor()
+    cursor.execute(f"UPDATE settings SET videoCodec = '{videoCodec}' WHERE ROWID = 1")
+    connection.commit()
+    connection.close()
+    return True
+
+
+def editAudioCodec(audioCodec):
+    connection = sqlite3.connect("shows.db")
+    cursor = connection.cursor()
+    cursor.execute(f"UPDATE settings SET audioCodec = '{audioCodec}' WHERE ROWID = 1")
+    connection.commit()
+    connection.close()
+    return True
+
+
+def getSettings():
+    connection = sqlite3.connect("shows.db")
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM settings")
+    settings = cursor.fetchall()
+    connection.commit()
+    connection.close()
+    return settings[0]
