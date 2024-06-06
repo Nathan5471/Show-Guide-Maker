@@ -298,23 +298,41 @@ def transcodeShow(
     audio,
     video,
     videoBitrate,
+    hardwareAcceleration,
 ):
-    subprocess.run(
-        f'ffmpeg -i "{episodeLocation}" -c:v {video} -b:v {videoBitrate} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
-    )
+    if hardwareAcceleration == "None":
+        subprocess.run(
+            f'ffmpeg -i "{episodeLocation}" -c:v {video} -b:v {videoBitrate} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
+        )
+    elif hardwareAcceleration == "qsv":
+        subprocess.run(
+            f'ffmpeg -hwaccel qsv -i "{episodeLocation}" -c:v {video}_qsv -b:v {videoBitrate} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
+        )
+    elif hardwareAcceleration == "nvenc":
+        subprocess.run(
+            f'ffmpeg -hwaccel cuda -i "{episodeLocation}" -c:v {video}_nvenc -b:v {videoBitrate} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
+        )
+    elif hardwareAcceleration == "amf":
+        subprocess.run(
+            f'ffmpeg -hwaccel dxva2  -i "{episodeLocation}" -c:v {video}_amf -b:v {videoBitrate} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
+        )
+    elif hardwareAcceleration == "amfDx11":
+        subprocess.run(
+            f'ffmpeg -hwaccel d3d11va   -i "{episodeLocation}" -c:v {video}_amf -b:v {videoBitrate} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
+        )
 
 
 def generateSettings():
     connection = sqlite3.connect("shows.db")
     cursor = connection.cursor()
     cursor.execute(
-        "CREATE TABLE IF NOT EXISTS settings(videoCodec, audioCodec, maxBitrate)"
+        "CREATE TABLE IF NOT EXISTS settings(videoCodec, audioCodec, maxBitrate, hardwareAcceleration)"
     )
     cursor.execute("SELECT * FROM settings")
     settings = cursor.fetchall()
     if not settings:
         cursor.execute(
-            "INSERT INTO settings(videoCodec, audioCodec, maxBitrate) VALUES ('h264', 'aac', '100M')"
+            "INSERT INTO settings(videoCodec, audioCodec, maxBitrate, hardwareAcceleration) VALUES ('h264', 'aac', '100M', 'None')"
         )
     connection.commit()
     connection.close()
@@ -342,6 +360,17 @@ def editMaxBitrate(maxBitrate):
     connection = sqlite3.connect("shows.db")
     cursor = connection.cursor()
     cursor.execute(f"UPDATE settings SET maxBitrate = '{maxBitrate}' WHERE ROWID = 1")
+    connection.commit()
+    connection.close()
+    return True
+
+
+def editHardwareAcceleration(hardwareAcceleration):
+    connection = sqlite3.connect("shows.db")
+    cursor = connection.cursor()
+    cursor.execute(
+        f"UPDATE settings SET hardwareAcceleration = '{hardwareAcceleration}' WHERE ROWID = 1"
+    )
     connection.commit()
     connection.close()
     return True

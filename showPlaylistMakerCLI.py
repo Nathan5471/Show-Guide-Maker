@@ -409,7 +409,11 @@ def createPlaylistCLI():
         showLocation = getShowInformation(episode[0])[2]
         season = re.search(r"S(\d+)", episode[1]).group(1)
         transcodeSettings = getShowInformation(episode[0])[4:6]
-        preferredVideoCodec, maxBitrate = getSettings()[0], getSettings()[2]
+        preferredVideoCodec, maxBitrate, hardwareAcceleration = (
+            getSettings()[0],
+            getSettings()[2],
+            getSettings()[3],
+        )
         if os.path.exists(f"{showLocation}/Season {season}/{episode[1]}"):
             print(f"Copying {episode[1]} from {episode[0]}")
             bitrate = calculateBitrate(f"{showLocation}/Season {season}/{episode[1]}")
@@ -428,6 +432,7 @@ def createPlaylistCLI():
                     transcodeSettings[0],
                     preferredVideoCodec,
                     maxBitrate,
+                    hardwareAcceleration,
                 )
             elif transcodeSettings == ("copy", "copy"):
                 copyShow(
@@ -447,6 +452,7 @@ def createPlaylistCLI():
                     transcodeSettings[0],
                     transcodeSettings[1],
                     maxBitrate,
+                    hardwareAcceleration,
                 )
             fileNumber += 1
     cursor.execute(f"UPDATE previousMain SET fileNumber = {fileNumber}")
@@ -462,8 +468,9 @@ def settingsCLI():
     print("1) Preferred Video Codec")
     print("2) Preferred Audio Codec")
     print("3) Max bitrate")
-    print("4) Get current settings")
-    print("5) Back to main menu")
+    print("4) Hardware Acceleration")
+    print("5) Get current settings")
+    print("6) Back to main menu")
     print("----------------------")
     print("")
     while True:
@@ -533,17 +540,47 @@ def settingsCLI():
             print(f"Max bitrate has been changed to {maxBitrate}")
             settingsCLI()
     elif selection == 4:
+        hardwareAccelerationOptions = ["qsv", "nvenc", "amf", "amfDx11", "none"]
+        print("")
+        print("--------------------------------")
+        print("1) Intel QSV")
+        print("2) Nvidia NVENC")
+        print("3) AMD AMF (DX9)")
+        print("4) AMD AMF (DX11)")
+        print("5) None")
+        print("--------------------------------")
+        print("")
+        while True:
+            try:
+                hardwareAcceleration = int(input("Enter your selection: "))
+            except ValueError:
+                print("Please input a valid number")
+                continue
+            if hardwareAcceleration > 5 or hardwareAcceleration < 1:
+                print("Please input a valid number")
+                continue
+            break
+        if editHardwareAcceleration(
+            hardwareAccelerationOptions[hardwareAcceleration - 1]
+        ):
+            print(
+                f"Hardware acceleration has been changed to {hardwareAccelerationOptions[hardwareAcceleration - 1]}"
+            )
+            settingsCLI()
+
+    elif selection == 5:
         settings = getSettings()
         print("")
         print("----------------------")
         print(f"Preferred Video Codec: {settings[0]}")
         print(f"Preferred Audio Codec: {settings[1]}")
         print(f"Max Bitrate: {settings[2]}")
+        print(f"Hardware Acceleration: {settings[3]}")
         print("----------------------")
         print("")
         input("Press enter to go back to settings")
         settingsCLI()
-    elif selection == 5:
+    elif selection == 6:
         mainMenu()
     else:
         print("Please input a valid number")
