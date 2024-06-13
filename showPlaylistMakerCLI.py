@@ -10,9 +10,10 @@ def mainMenu():
     print("2) Edit show")
     print("3) Remove show")
     print("4) Get shows")
-    print("5) Change order")
-    print("6) Create playlist")
-    print("7) Settings")
+    print("5) Movies")
+    print("6) Change order")
+    print("7) Create playlist")
+    print("8) Settings")
     print("-------------------")
     print("")
 
@@ -35,12 +36,15 @@ def mainMenu():
         getShowsCLI()
 
     elif selection == 5:
-        changeOrderCLI()
+        movieCLI()
 
     elif selection == 6:
-        createPlaylistCLI()
+        changeOrderCLI()
 
     elif selection == 7:
+        createPlaylistCLI()
+
+    elif selection == 8:
         settingsCLI()
 
     else:
@@ -295,8 +299,218 @@ def getShowsCLI():
     mainMenu()
 
 
+def movieCLI():
+    print("")
+    print("-----------------------------------")
+    print("1) Add movie")
+    print("2) Edit movie")
+    print("3) Remove movie")
+    print("4) Get movies")
+    print("5) Set amounts of movies per run")
+    print("6) Back to main menu")
+    print("-----------------------------------")
+    print("")
+    while True:
+        try:
+            selection = int(input("Enter your selection: "))
+        except ValueError:
+            print("Please input a valid number")
+            continue
+        break
+    if selection == 1:
+        movieName = input("Enter the name of the movie: ")
+        while True:
+            movieLocation = input("Enter the location of the movie: ")
+            if os.path.exists(movieLocation):
+                break
+            else:
+                print(
+                    "File location does not exists, please input a valid file location"
+                )
+                continue
+        preferredVideoCodec, preferredAudioCodec = getSettings()[0:2]
+        while True:
+            audioTranscode = input("Do you want to transcode the audio [y/n]: ")
+            if audioTranscode == "y":
+                audioTranscode = preferredAudioCodec
+                break
+            elif audioTranscode == "n":
+                audioTranscode = "copy"
+                break
+            else:
+                print("Please input y or n")
+        while True:
+            videoTranscode = input("Do you want to transcode the video [y/n]: ")
+            if videoTranscode == "y":
+                videoTranscode = preferredVideoCodec
+                break
+            elif videoTranscode == "n":
+                videoTranscode = "copy"
+                break
+            else:
+                print("Please input y or n")
+        result = addMovie(movieName, movieLocation, audioTranscode, videoTranscode)
+        if result:
+            print(f"{movieName} has been added!")
+            movieCLI()
+    elif selection == 2:
+        movies = getMovies()
+        print("")
+        print("----------------------")
+        for movie in movies:
+            print(f"{movies.index(movie) + 1}) {movie}")
+        print("----------------------")
+        print("")
+        while True:
+            try:
+                movieSelection = int(input("Enter the movie to edit: "))
+            except ValueError:
+                print("Please input a valid number")
+                continue
+            if movieSelection > len(movies):
+                print("Please input a valid number")
+                continue
+            break
+        print("")
+        print("----------------------")
+        print("1) Name")
+        print("2) Location")
+        print("3) Transcode settings")
+        print("----------------------")
+        print("")
+        while True:
+            try:
+                editSelection = int(input("Enter your selection to edit: "))
+            except ValueError:
+                print("Please input a valid number")
+                continue
+            break
+        if editSelection == 1:
+            newName = input("Enter the new name for this movie: ")
+            while True:
+                confirmation = input(
+                    f"Are you sure you want to rename {movies[movieSelection - 1]} to {newName} [y/n]: "
+                )
+                if confirmation == "y":
+                    break
+                elif confirmation == "n":
+                    movieCLI()
+                else:
+                    print("Please input a valid y or n")
+            result = editMovieName(movies[movieSelection - 1], newName)
+            if result:
+                print("The movie has been edited sucessfully!")
+                movieCLI()
+        elif editSelection == 2:
+            newLocation = input("Enter the new location for this movie: ")
+            if os.path.exists(newLocation):
+                result = editMovieFolder(movies[movieSelection - 1], newLocation)
+                if result:
+                    print(
+                        f"The location of {movies[movieSelection - 1]} has been changed to {newLocation}"
+                    )
+                    movieCLI()
+        elif editSelection == 3:
+            transcodeSettings = getSettings()
+            while True:
+                audioTranscode = input("Do you want to transcode the audio [y/n]: ")
+                if audioTranscode == "y":
+                    audioTranscode = transcodeSettings[1]
+                    break
+                elif audioTranscode == "n":
+                    audioTranscode = "copy"
+                    break
+                else:
+                    print("Please input y or n")
+            while True:
+                videoTranscode = input("Do you want to transcode the video [y/n]: ")
+                if videoTranscode == "y":
+                    videoTranscode = transcodeSettings[0]
+                    break
+                elif videoTranscode == "n":
+                    videoTranscode = "copy"
+                    break
+                else:
+                    print("Please input y or n")
+            result = editMovieTranscode(
+                movies[movieSelection - 1], audioTranscode, videoTranscode
+            )
+            if result:
+                print(
+                    f"{movies[movieSelection - 1]} now transcodes audio to {audioTranscode} and video to {videoTranscode}"
+                )
+                movieCLI()
+    elif selection == 3:
+        movies = getMovies()
+        print("")
+        print("----------------------")
+        for movie in movies:
+            print(f"{movies.index(movie) + 1}) {movie}")
+        print("----------------------")
+        print("")
+        while True:
+            try:
+                movieSelection = int(input("Enter the movie to delete: "))
+            except ValueError:
+                print("Please input a valid number")
+                continue
+            if movieSelection > len(movies):
+                print("Please input a valid number")
+                continue
+            break
+        while True:
+            confirmation = input(
+                f"Are you sure your want to delete {movies[movieSelection - 1]} [y/n]: "
+            )
+            if confirmation == "y":
+                break
+            elif confirmation == "n":
+                movieCLI()
+            else:
+                print("Please select y or n")
+        result = removeMovie(movies[movieSelection - 1])
+        if result:
+            print(f"{movies[movieSelection - 1]} has been succesfully deleted")
+            movieCLI()
+    elif selection == 4:
+        movies = getMovies()
+        for movie in movies:
+            movieInformation = getMovieInformation(movie)
+            print("")
+            print(movie)
+            print(f"  Location: {movieInformation[1]}")
+            print(f"  Audio transcode: {movieInformation[2]}")
+            print(f"  Video transcode: {movieInformation[3]}")
+            print("")
+        input("Press enter for movie menu")  # Allows time for viewing information
+        movieCLI()
+    elif selection == 5:
+        while True:
+            try:
+                moviesPerRun = int(input("Enter the amount of movies per run: "))
+            except ValueError:
+                print("Please input a valid number")
+                continue
+            break
+        result = editMoviesPerRun(moviesPerRun)
+        if result:
+            print(f"Movies per run has been set to {moviesPerRun}")
+            movieCLI()
+    elif selection == 6:
+        mainMenu()
+
+
 def changeOrderCLI():
     shows = getShows()
+    connection = sqlite3.connect("shows.db")
+    cursor = connection.cursor()
+    cursor.execute("SELECT moviesPerRun FROM settings")
+    moviesPerRun = cursor.fetchone()
+    connection.commit()
+    connection.close()
+    if int(moviesPerRun[0]) > 0:
+        for movie in range(int(moviesPerRun[0])):
+            shows.append("Movie")
     position = 1
     showsPosition = []
     while True:
@@ -324,8 +538,10 @@ def changeOrderCLI():
         position += 1
         shows.remove(shows[showSelection - 1])
         print(f"The current order is {showsPosition}")
+    position = 1
     for show in showsPosition:
-        print(f"{showsPosition.index(show) + 1}) {show}")
+        print(f"{position}) {show}")
+        position += 1
     while True:
         confirmation = input("Are you sure you want the above order [y/n]: ")
         if confirmation == "y" or confirmation == "n":
@@ -334,7 +550,7 @@ def changeOrderCLI():
     if confirmation == "n":
         mainMenu()
     for show in showsPosition:
-        result = changeShowPosition(show, (showsPosition.index(show) + 1))
+        result = editShowOrder(showsPosition)
         if result:
             continue
     print("Show order sucessfully changed!")
@@ -342,7 +558,7 @@ def changeOrderCLI():
 
 
 def createPlaylistCLI():
-    check = checkShowPositionExist()  # Makes sure every show has a position
+    check = checkShowOrder()  # Makes sure there is an order
     if not check:
         print("Please make an order for your shows")
         mainMenu()
@@ -406,6 +622,60 @@ def createPlaylistCLI():
     else:
         fileNumber = fileNumber[0]
     for episode in playlist:
+        if episode[0] == "Movie":
+            movieLocation = getMovieInformation(episode[1])[1]
+            transcodeSettings = getMovieInformation(episode[1])[2:4]
+            preferredVideoCodec, maxBitrate, hardwareAcceleration = (
+                getSettings()[0],
+                getSettings()[2],
+                getSettings()[3],
+            )
+            fileExtinsion = movieLocation.split(".")[-1]
+            if os.path.exists(movieLocation):
+                print(f"Copying {episode[1]}")
+                bitrate = calculateBitrate(movieLocation)
+                number, suffix = float(maxBitrate[:-1]), maxBitrate[-1]
+                if suffix == "M":
+                    number = number * 1000
+                elif suffix == "K":
+                    number = number
+                if bitrate > number:
+                    print(1)
+                    transcodeMovie(
+                        movieLocation,
+                        episode[1],
+                        folderLocation,
+                        f"{'0'*(6-len(str(fileNumber)))}{fileNumber}",
+                        fileExtinsion,
+                        transcodeSettings[0],
+                        preferredVideoCodec,
+                        maxBitrate,
+                        hardwareAcceleration,
+                    )
+                elif transcodeSettings == ("copy", "copy"):
+                    print(2)
+                    copyMovie(
+                        movieLocation,
+                        episode[1],
+                        f"{'0'*(6-len(str(fileNumber)))}{fileNumber}",
+                        folderLocation,
+                        fileExtinsion,
+                    )
+                else:
+                    print(3)
+                    transcodeMovie(
+                        movieLocation,
+                        episode[1],
+                        folderLocation,
+                        f"{'0'*(6-len(str(fileNumber)))}{fileNumber}",
+                        fileExtinsion,
+                        transcodeSettings[0],
+                        transcodeSettings[1],
+                        maxBitrate,
+                        hardwareAcceleration,
+                    )
+                fileNumber += 1
+            continue
         showLocation = getShowInformation(episode[0])[2]
         season = re.search(r"S(\d+)", episode[1]).group(1)
         transcodeSettings = getShowInformation(episode[0])[4:6]
@@ -540,14 +810,11 @@ def settingsCLI():
             print(f"Max bitrate has been changed to {maxBitrate}")
             settingsCLI()
     elif selection == 4:
-        hardwareAccelerationOptions = ["qsv", "nvenc", "amf", "amfDx11", "none"]
+        hardwareAccelerationOptions = ["qsv", "none"]
         print("")
         print("--------------------------------")
         print("1) Intel QSV")
-        print("2) Nvidia NVENC")
-        print("3) AMD AMF (DX9)")
-        print("4) AMD AMF (DX11)")
-        print("5) None")
+        print("2) None")
         print("--------------------------------")
         print("")
         while True:
@@ -556,7 +823,7 @@ def settingsCLI():
             except ValueError:
                 print("Please input a valid number")
                 continue
-            if hardwareAcceleration > 5 or hardwareAcceleration < 1:
+            if hardwareAcceleration > 2 or hardwareAcceleration < 1:
                 print("Please input a valid number")
                 continue
             break
