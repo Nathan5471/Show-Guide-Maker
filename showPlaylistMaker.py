@@ -409,9 +409,6 @@ def transcodeShow(
             f'ffmpeg -i "{episodeLocation}" -c:v {video} -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
         )
     elif hardwareAcceleration == "qsv":
-        print(
-            f'ffmpeg -hwaccel qsv -hwaccel_output_format qsv -i "{episodeLocation}" -c:v {video}_qsv -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
-        )
         subprocess.run(
             f'ffmpeg -hwaccel qsv -hwaccel_output_format qsv -i "{episodeLocation}" -c:v {video}_qsv -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
         )
@@ -514,6 +511,3 @@ def getSettings():
     connection.commit()
     connection.close()
     return settings[0]
-
-
-print(getShowInformation("Bluey")[3:5])
