@@ -624,106 +624,53 @@ def createPlaylistCLI():
     for episode in playlist:
         if episode[0] == "Movie":
             movieLocation = getMovieInformation(episode[1])[1]
-            transcodeSettings = getMovieInformation(episode[1])[2:4]
-            preferredVideoCodec, maxBitrate, hardwareAcceleration = (
-                getSettings()[0],
-                getSettings()[2],
-                getSettings()[3],
+            preferredVideoCodec, preferredAudioCodec, CRF, hardwareAcceleration = (
+                getSettings()[0:4]
             )
+            audioCodec, videoCodec = getShowInformation(episode[0])[3:5]
+            if audioCodec != "copy":
+                audioCodec = preferredAudioCodec
+            if videoCodec != "copy":
+                videoCodec = preferredVideoCodec
             fileExtinsion = movieLocation.split(".")[-1]
             if os.path.exists(movieLocation):
                 print(f"Copying {episode[1]}")
-                bitrate = calculateBitrate(movieLocation)
-                number, suffix = float(maxBitrate[:-1]), maxBitrate[-1]
-                if suffix == "M":
-                    number = number * 1000
-                elif suffix == "K":
-                    number = number
-                if bitrate > number:
-                    print(1)
-                    transcodeMovie(
-                        movieLocation,
-                        episode[1],
-                        folderLocation,
-                        f"{'0'*(6-len(str(fileNumber)))}{fileNumber}",
-                        fileExtinsion,
-                        transcodeSettings[0],
-                        preferredVideoCodec,
-                        maxBitrate,
-                        hardwareAcceleration,
-                    )
-                elif transcodeSettings == ("copy", "copy"):
-                    print(2)
-                    copyMovie(
-                        movieLocation,
-                        episode[1],
-                        f"{'0'*(6-len(str(fileNumber)))}{fileNumber}",
-                        folderLocation,
-                        fileExtinsion,
-                    )
-                else:
-                    print(3)
-                    transcodeMovie(
-                        movieLocation,
-                        episode[1],
-                        folderLocation,
-                        f"{'0'*(6-len(str(fileNumber)))}{fileNumber}",
-                        fileExtinsion,
-                        transcodeSettings[0],
-                        transcodeSettings[1],
-                        maxBitrate,
-                        hardwareAcceleration,
-                    )
+                transcodeMovie(
+                    movieLocation,
+                    episode[1],
+                    folderLocation,
+                    f"{'0'*(6-len(str(fileNumber)))}{fileNumber}",
+                    fileExtinsion,
+                    audioCodec,
+                    videoCodec,
+                    CRF,
+                    hardwareAcceleration,
+                )
                 fileNumber += 1
             continue
         showLocation = getShowInformation(episode[0])[2]
         season = re.search(r"S(\d+)", episode[1]).group(1)
-        transcodeSettings = getShowInformation(episode[0])[4:6]
-        preferredVideoCodec, maxBitrate, hardwareAcceleration = (
-            getSettings()[0],
-            getSettings()[2],
-            getSettings()[3],
+        preferredVideoCodec, preferredAudioCodec, CRF, hardwareAcceleration = (
+            getSettings()[0:4]
         )
+        audioCodec, videoCodec = getShowInformation(episode[0])[3:5]
+        if audioCodec != "copy":
+            audioCodec = preferredAudioCodec
+        if videoCodec != "copy":
+            videoCodec = preferredVideoCodec
         if os.path.exists(f"{showLocation}/Season {season}/{episode[1]}"):
             print(f"Copying {episode[1]} from {episode[0]}")
-            bitrate = calculateBitrate(f"{showLocation}/Season {season}/{episode[1]}")
-            number, suffix = float(maxBitrate[:-1]), maxBitrate[-1]
-            if suffix == "M":
-                number = number * 1000
-            elif suffix == "K":
-                number = number
-            if bitrate > number:
-                transcodeShow(
-                    episode[0],
-                    f"{showLocation}/Season {season}/{episode[1]}",
-                    episode[1],
-                    f"{'0'*(6-len(str(fileNumber)))}{fileNumber}",
-                    folderLocation,
-                    transcodeSettings[0],
-                    preferredVideoCodec,
-                    maxBitrate,
-                    hardwareAcceleration,
-                )
-            elif transcodeSettings == ("copy", "copy"):
-                copyShow(
-                    episode[0],
-                    f"{showLocation}/Season {season}/{episode[1]}",
-                    episode[1],
-                    f"{'0'*(6-len(str(fileNumber)))}{fileNumber}",
-                    folderLocation,
-                )
-            else:
-                transcodeShow(
-                    episode[0],
-                    f"{showLocation}/Season {season}/{episode[1]}",
-                    episode[1],
-                    f"{'0'*(6-len(str(fileNumber)))}{fileNumber}",
-                    folderLocation,
-                    transcodeSettings[0],
-                    transcodeSettings[1],
-                    maxBitrate,
-                    hardwareAcceleration,
-                )
+            transcodeShow(
+                episode[0],
+                f"{showLocation}/Season {season}/{episode[1]}",
+                episode[1],
+                f"{'0'*(6-len(str(fileNumber)))}{fileNumber}",
+                folderLocation,
+                audioCodec,
+                videoCodec,
+                CRF,
+                hardwareAcceleration,
+            )
             fileNumber += 1
     cursor.execute(f"UPDATE previousMain SET fileNumber = {fileNumber}")
     connection.commit()
@@ -737,7 +684,7 @@ def settingsCLI():
     print("----------------------")
     print("1) Preferred Video Codec")
     print("2) Preferred Audio Codec")
-    print("3) Max bitrate")
+    print("3) CRF")
     print("4) Hardware Acceleration")
     print("5) Get current settings")
     print("6) Back to main menu")
@@ -794,23 +741,25 @@ def settingsCLI():
             print(f"Audio codec has been changed to {codecs[audioCodecSelection - 1]}")
             settingsCLI()
     elif selection == 3:
-        print("Please input the bitrate in mbps")
+        print(
+            "CRF is a value that is between 0 and 51 (Lower values mean better quality)"
+        )
+        print("Sane values are 18-28")
         while True:
             try:
-                maxBitrate = float(input("Enter the max bitrate: "))
+                CRF = int(input("Enter the CRF value: "))
             except ValueError:
                 print("Please input a valid number")
                 continue
+            if CRF > 51 or CRF < 0:
+                print("Please input a number between 1 and 51")
+                continue
             break
-        if maxBitrate < 1:
-            maxBitrate = f"{int(maxBitrate*1000)}K"
-        else:
-            maxBitrate = f"{int(maxBitrate)}M"
-        if editMaxBitrate(maxBitrate):
-            print(f"Max bitrate has been changed to {maxBitrate}")
+        if editCRF(CRF):
+            print(f"CRF has been changed to {CRF}")
             settingsCLI()
     elif selection == 4:
-        hardwareAccelerationOptions = ["qsv", "none"]
+        hardwareAccelerationOptions = ["qsv", "None"]
         print("")
         print("--------------------------------")
         print("1) Intel QSV")
@@ -841,7 +790,7 @@ def settingsCLI():
         print("----------------------")
         print(f"Preferred Video Codec: {settings[0]}")
         print(f"Preferred Audio Codec: {settings[1]}")
-        print(f"Max Bitrate: {settings[2]}")
+        print(f"CRF: {settings[2]}")
         print(f"Hardware Acceleration: {settings[3]}")
         print("----------------------")
         print("")

@@ -312,7 +312,7 @@ def createShowOrder(orderLength):
                 continue
             showInformation = getShowInformation(show)
             while True:
-                cursor.execute(f"SELECT 1 FROM previousShow WHERE show = '{show[0]}'")
+                cursor.execute(f"SELECT * FROM previousShow WHERE show = '{show}'")
                 enteryExist = cursor.fetchone()
                 episodesPerRun = showInformation[1]
                 if not enteryExist:
@@ -337,7 +337,7 @@ def createShowOrder(orderLength):
                         )
                         episode = cursor.fetchone()
                         cursor.execute(
-                            f"UPDATE previousShow SET episode = '{episode[0]}', id = {previousEpisode[2] + 1} WHERE show = '{show[0]}'"
+                            f"UPDATE previousShow SET episode = '{episode[0]}', id = {previousEpisode[2] + 1} WHERE show = '{show}'"
                         )
                     else:  # Fixes show hitting the last episode
                         cursor.execute(f"SELECT * FROM '{show}' LIMIT 1")
@@ -389,10 +389,6 @@ def getDriveLocations():
     return locations
 
 
-def copyShow(showName, episodeLocation, episode, fileNumber, destination):
-    shutil.copy(episodeLocation, f"{destination}/{fileNumber} - {showName} {episode}")
-
-
 def transcodeShow(
     showName,
     episodeLocation,
@@ -401,16 +397,23 @@ def transcodeShow(
     destination,
     audio,
     video,
-    videoBitrate,
+    CRF,
     hardwareAcceleration,
 ):
     if hardwareAcceleration == "None":
         subprocess.run(
-            f'ffmpeg -i "{episodeLocation}" -c:v {video} -b:v {videoBitrate} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
+            f'ffmpeg -i "{episodeLocation}" -c:v {video} -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
+        )
+    elif video == "copy":
+        subprocess.run(
+            f'ffmpeg -i "{episodeLocation}" -c:v {video} -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
         )
     elif hardwareAcceleration == "qsv":
+        print(
+            f'ffmpeg -hwaccel qsv -hwaccel_output_format qsv -i "{episodeLocation}" -c:v {video}_qsv -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
+        )
         subprocess.run(
-            f'ffmpeg -hwaccel qsv -hwaccel_output_format qsv -i "{episodeLocation}" -vf scale_qsv=format=nv12 -c:v {video}_qsv -b:v {videoBitrate} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
+            f'ffmpeg -hwaccel qsv -hwaccel_output_format qsv -i "{episodeLocation}" -c:v {video}_qsv -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
         )
 
 
@@ -422,37 +425,35 @@ def transcodeMovie(
     fileExtension,
     audio,
     video,
-    videoBitrate,
+    CRF,
     hardwareAcceleration,
 ):
 
     if hardwareAcceleration == "None":
         subprocess.run(
-            f'ffmpeg -i "{movieLocation}" -c:v {video} -b:v {videoBitrate} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
+            f'ffmpeg -i "{movieLocation}" -c:v {video} -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
+        )
+    elif video == "copy":
+        subprocess.run(
+            f'ffmpeg -i "{movieLocation}" -c:v {video} -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
         )
     elif hardwareAcceleration == "qsv":
         subprocess.run(
-            f'ffmpeg -hwaccel qsv -i "{movieLocation}" -vf scale_qsv=format=nv12 -c:v {video}_qsv -b:v {videoBitrate} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
+            f'ffmpeg -hwaccel qsv -i "{movieLocation}" -vf scale_qsv=format=nv12 -c:v {video}_qsv -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
         )
-
-
-def copyMovie(movieName, movieLocation, fileNumber, destination, fileExtension):
-    shutil.copy(
-        movieLocation, f"{destination}/{fileNumber} - {movieName}.{fileExtension}"
-    )
 
 
 def generateSettings():
     connection = sqlite3.connect("shows.db")
     cursor = connection.cursor()
     cursor.execute(
-        "CREATE TABLE IF NOT EXISTS settings(videoCodec, audioCodec, maxBitrate, hardwareAcceleration, moviesPerRun)"
+        "CREATE TABLE IF NOT EXISTS settings(videoCodec, audioCodec, CRF, hardwareAcceleration, moviesPerRun)"
     )
     cursor.execute("SELECT * FROM settings")
     settings = cursor.fetchall()
     if not settings:
         cursor.execute(
-            "INSERT INTO settings(videoCodec, audioCodec, maxBitrate, hardwareAcceleration, moviesPerRun) VALUES ('h264', 'aac', '100M', 'None', 0)"
+            "INSERT INTO settings(videoCodec, audioCodec, CRF, hardwareAcceleration, moviesPerRun) VALUES ('h264', 'aac', '23', 'None', 0)"
         )
     connection.commit()
     connection.close()
@@ -476,10 +477,10 @@ def editAudioCodec(audioCodec):
     return True
 
 
-def editMaxBitrate(maxBitrate):
+def editCRF(CRF):
     connection = sqlite3.connect("shows.db")
     cursor = connection.cursor()
-    cursor.execute(f"UPDATE settings SET maxBitrate = '{maxBitrate}' WHERE ROWID = 1")
+    cursor.execute(f"UPDATE settings SET CRF = '{CRF}' WHERE ROWID = 1")
     connection.commit()
     connection.close()
     return True
@@ -515,9 +516,4 @@ def getSettings():
     return settings[0]
 
 
-def calculateBitrate(videoLocation):
-    video = mp.VideoFileClip(videoLocation)
-    videoLength = video.duration
-    videoSize = os.path.getsize(videoLocation)
-    bitrate = (videoSize * 8 / videoLength) / 1000
-    return bitrate  # Returns in kbps
+print(getShowInformation("Bluey")[3:5])
