@@ -389,6 +389,31 @@ def getDriveLocations():
     return locations
 
 
+def detectHDR(videoLocation):
+    ffprobeOutput = subprocess.check_output(
+        [
+            "ffprobe",
+            "-i",
+            videoLocation,
+            "-show_entries",
+            "stream=color_transfer,color_space",
+            "-v",
+            "quiet",
+        ]
+    )
+    lines = ffprobeOutput.decode("utf-8").split("\n")
+    colorSpace = ""
+    colorTransfer = ""
+    for line in lines:
+        if "color_space" in line:
+            colorSpace = line.split("=")[1]
+        if "color_transfer" in line:
+            colorTransfer = line.split("=")[1]
+    if "bt2020" in colorSpace and not ("bt709" in colorTransfer):
+        return True
+    return False
+
+
 def transcodeShow(
     showName,
     episodeLocation,
@@ -406,11 +431,28 @@ def transcodeShow(
         )
     elif video == "copy":
         subprocess.run(
-            f'ffmpeg -i "{episodeLocation}" -c:v {video} -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
+            f'ffmpeg -hwaccel qsv -hwaccel_output_format qsv -i "{episodeLocation}" -c:v {video} -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
         )
     elif hardwareAcceleration == "qsv":
         subprocess.run(
             f'ffmpeg -hwaccel qsv -hwaccel_output_format qsv -i "{episodeLocation}" -c:v {video}_qsv -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
+        )
+
+
+def transcodeShowHDR(
+    showName,
+    episodeLocation,
+    episode,
+    fileNumber,
+    destination,
+    audio,
+    video,
+    CRF,
+    hardwareAcceleration,
+):
+    if hardwareAcceleration:  # Will soon be change to if hardwareAccelartion == "None"
+        subprocess.run(
+            f'ffmpeg -i "{episodeLocation}" -vf zscale=transfer=linear,tonemap=hable,zscale=transfer=bt709,format=yuv420p -c:v {video} -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
         )
 
 
@@ -432,11 +474,28 @@ def transcodeMovie(
         )
     elif video == "copy":
         subprocess.run(
-            f'ffmpeg -i "{movieLocation}" -c:v {video} -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
+            f'ffmpeg -hwaccel qsv -hwaccel_output_format qsv -i "{movieLocation}" -c:v {video} -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
         )
     elif hardwareAcceleration == "qsv":
         subprocess.run(
-            f'ffmpeg -hwaccel qsv -i "{movieLocation}" -vf scale_qsv=format=nv12 -c:v {video}_qsv -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
+            f'ffmpeg -hwaccel qsv -hwaccel_output_format qsv -i "{movieLocation}" -vf scale_qsv=format=nv12 -c:v {video}_qsv -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
+        )
+
+
+def transcodeMovieHDR(
+    movieLocation,
+    movieName,
+    destination,
+    fileNumber,
+    fileExtension,
+    audio,
+    video,
+    CRF,
+    hardwareAcceleration,
+):
+    if hardwareAcceleration:  # Will soon be change to if hardwareAccelartion == "None"
+        subprocess.run(
+            f'ffmpeg -i "{movieLocation}" -vf zscale=transfer=linear,tonemap=hable,zscale=transfer=bt709,format=yuv420p -c:v {video} -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
         )
 
 
@@ -444,13 +503,13 @@ def generateSettings():
     connection = sqlite3.connect("shows.db")
     cursor = connection.cursor()
     cursor.execute(
-        "CREATE TABLE IF NOT EXISTS settings(videoCodec, audioCodec, CRF, hardwareAcceleration, moviesPerRun)"
+        "CREATE TABLE IF NOT EXISTS settings(videoCodec, audioCodec, CRF, hardwareAcceleration, tonemapping, moviesPerRun)"
     )
     cursor.execute("SELECT * FROM settings")
     settings = cursor.fetchall()
     if not settings:
         cursor.execute(
-            "INSERT INTO settings(videoCodec, audioCodec, CRF, hardwareAcceleration, moviesPerRun) VALUES ('h264', 'aac', '23', 'None', 0)"
+            f"INSERT INTO settings(videoCodec, audioCodec, CRF, hardwareAcceleration, tonemapping, moviesPerRun) VALUES ('h264', 'aac', '23', 'None', 'True', 0)"
         )
     connection.commit()
     connection.close()
@@ -489,6 +548,15 @@ def editHardwareAcceleration(hardwareAcceleration):
     cursor.execute(
         f"UPDATE settings SET hardwareAcceleration = '{hardwareAcceleration}' WHERE ROWID = 1"
     )
+    connection.commit()
+    connection.close()
+    return True
+
+
+def editTonemapping(tonemapping):
+    connection = sqlite3.connect("shows.db")
+    cursor = connection.cursor()
+    cursor.execute(f"UPDATE settings SET tonemapping = {tonemapping} WHERE ROWID = 1")
     connection.commit()
     connection.close()
     return True

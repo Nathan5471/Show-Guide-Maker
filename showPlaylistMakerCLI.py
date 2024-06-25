@@ -624,9 +624,13 @@ def createPlaylistCLI():
     for episode in playlist:
         if episode[0] == "Movie":
             movieLocation = getMovieInformation(episode[1])[1]
-            preferredVideoCodec, preferredAudioCodec, CRF, hardwareAcceleration = (
-                getSettings()[0:4]
-            )
+            (
+                preferredVideoCodec,
+                preferredAudioCodec,
+                CRF,
+                hardwareAcceleration,
+                tonemapping,
+            ) = getSettings()[0:5]
             audioCodec, videoCodec = getShowInformation(episode[0])[3:5]
             if audioCodec != "copy":
                 audioCodec = preferredAudioCodec
@@ -635,24 +639,44 @@ def createPlaylistCLI():
             fileExtinsion = movieLocation.split(".")[-1]
             if os.path.exists(movieLocation):
                 print(f"Copying {episode[1]}")
-                transcodeMovie(
-                    movieLocation,
-                    episode[1],
-                    folderLocation,
-                    f"{'0'*(6-len(str(fileNumber)))}{fileNumber}",
-                    fileExtinsion,
-                    audioCodec,
-                    videoCodec,
-                    CRF,
-                    hardwareAcceleration,
-                )
+                if tonemapping == True:
+                    if detectHDR(movieLocation):
+                        transcodeMovieHDR(
+                            movieLocation,
+                            episode[1],
+                            folderLocation,
+                            f"{'0'*(6-len(str(fileNumber)))}{fileNumber}",
+                            fileExtinsion,
+                            audioCodec,
+                            videoCodec,
+                            CRF,
+                            hardwareAcceleration,
+                        )
+                    else:
+                        pass
+                else:
+                    transcodeMovie(
+                        movieLocation,
+                        episode[1],
+                        folderLocation,
+                        f"{'0'*(6-len(str(fileNumber)))}{fileNumber}",
+                        fileExtinsion,
+                        audioCodec,
+                        videoCodec,
+                        CRF,
+                        hardwareAcceleration,
+                    )
                 fileNumber += 1
             continue
         showLocation = getShowInformation(episode[0])[2]
         season = re.search(r"S(\d+)", episode[1]).group(1)
-        preferredVideoCodec, preferredAudioCodec, CRF, hardwareAcceleration = (
-            getSettings()[0:4]
-        )
+        (
+            preferredVideoCodec,
+            preferredAudioCodec,
+            CRF,
+            hardwareAcceleration,
+            tonemapping,
+        ) = getSettings()[0:5]
         audioCodec, videoCodec = getShowInformation(episode[0])[3:5]
         if audioCodec != "copy":
             audioCodec = preferredAudioCodec
@@ -660,17 +684,33 @@ def createPlaylistCLI():
             videoCodec = preferredVideoCodec
         if os.path.exists(f"{showLocation}/Season {season}/{episode[1]}"):
             print(f"Copying {episode[1]} from {episode[0]}")
-            transcodeShow(
-                episode[0],
-                f"{showLocation}/Season {season}/{episode[1]}",
-                episode[1],
-                f"{'0'*(6-len(str(fileNumber)))}{fileNumber}",
-                folderLocation,
-                audioCodec,
-                videoCodec,
-                CRF,
-                hardwareAcceleration,
-            )
+            if tonemapping == True:
+                if detectHDR(f"{showLocation}/Season {season}/{episode[1]}"):
+                    transcodeShowHDR(
+                        episode[0],
+                        f"{showLocation}/Season {season}/{episode[1]}",
+                        episode[1],
+                        f"{'0'*(6-len(str(fileNumber)))}{fileNumber}",
+                        folderLocation,
+                        audioCodec,
+                        videoCodec,
+                        CRF,
+                        hardwareAcceleration,
+                    )
+                else:
+                    pass
+            else:
+                transcodeShow(
+                    episode[0],
+                    f"{showLocation}/Season {season}/{episode[1]}",
+                    episode[1],
+                    f"{'0'*(6-len(str(fileNumber)))}{fileNumber}",
+                    folderLocation,
+                    audioCodec,
+                    videoCodec,
+                    CRF,
+                    hardwareAcceleration,
+                )
             fileNumber += 1
     cursor.execute(f"UPDATE previousMain SET fileNumber = {fileNumber}")
     connection.commit()
@@ -686,8 +726,9 @@ def settingsCLI():
     print("2) Preferred Audio Codec")
     print("3) CRF")
     print("4) Hardware Acceleration")
-    print("5) Get current settings")
-    print("6) Back to main menu")
+    print("5) Tonemapping")
+    print("6) Get current settings")
+    print("7) Back to main menu")
     print("----------------------")
     print("")
     while True:
@@ -783,8 +824,21 @@ def settingsCLI():
                 f"Hardware acceleration has been changed to {hardwareAccelerationOptions[hardwareAcceleration - 1]}"
             )
             settingsCLI()
-
-    elif selection == 5:
+    elif selection == 7:
+        while True:
+            tonemapping = input("Do you want to enable tonemapping [y/n]: ")
+            if tonemapping == "y":
+                tonemapping = "True"
+                break
+            elif tonemapping == "n":
+                tonemapping = "False"
+                break
+            else:
+                print("Please input y or n")
+        if editTonemapping(tonemapping):
+            print(f"Tonemapping has been set to {tonemapping}")
+            settingsCLI()
+    elif selection == 6:
         settings = getSettings()
         print("")
         print("----------------------")
@@ -796,7 +850,7 @@ def settingsCLI():
         print("")
         input("Press enter to go back to settings")
         settingsCLI()
-    elif selection == 6:
+    elif selection == 7:
         mainMenu()
     else:
         print("Please input a valid number")
