@@ -632,7 +632,7 @@ def createPlaylistCLI():
                 tonemapping,
                 maxResolution,
             ) = getSettings()[0:6]
-            audioCodec, videoCodec = getShowInformation(episode[0])[3:5]
+            audioCodec, videoCodec = getMovieInformation(episode[1])[2:4]
             if audioCodec != "copy":
                 audioCodec = preferredAudioCodec
             if videoCodec != "copy":
