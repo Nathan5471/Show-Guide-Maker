@@ -631,7 +631,8 @@ def createPlaylistCLI():
                 hardwareAcceleration,
                 tonemapping,
                 maxResolution,
-            ) = getSettings()[0:6]
+                preset,
+            ) = getSettings()[0:7]
             audioCodec, videoCodec = getMovieInformation(episode[1])[2:4]
             if audioCodec != "copy":
                 audioCodec = preferredAudioCodec
@@ -653,6 +654,7 @@ def createPlaylistCLI():
                             CRF,
                             hardwareAcceleration,
                             maxResolution,
+                            preset,
                         )
                     else:
                         pass
@@ -668,6 +670,7 @@ def createPlaylistCLI():
                         CRF,
                         hardwareAcceleration,
                         maxResolution,
+                        preset,
                     )
                 fileNumber += 1
             continue
@@ -680,7 +683,8 @@ def createPlaylistCLI():
             hardwareAcceleration,
             tonemapping,
             maxResolution,
-        ) = getSettings()[0:6]
+            preset,
+        ) = getSettings()[0:7]
         audioCodec, videoCodec = getShowInformation(episode[0])[3:5]
         if audioCodec != "copy":
             audioCodec = preferredAudioCodec
@@ -701,6 +705,7 @@ def createPlaylistCLI():
                         CRF,
                         hardwareAcceleration,
                         maxResolution,
+                        preset,
                     )
                 else:
                     pass
@@ -716,6 +721,7 @@ def createPlaylistCLI():
                     CRF,
                     hardwareAcceleration,
                     maxResolution,
+                    preset,
                 )
             fileNumber += 1
     cursor.execute(f"UPDATE previousMain SET fileNumber = {fileNumber}")
@@ -734,8 +740,9 @@ def settingsCLI():
     print("4) Hardware Acceleration")
     print("5) Tonemapping")
     print("6) Max resolution")
-    print("7) Get current settings")
-    print("8) Back to main menu")
+    print("7) Preset")
+    print("8) Get current settings")
+    print("9) Back to main menu")
     print("----------------------")
     print("")
     while True:
@@ -879,8 +886,45 @@ def settingsCLI():
                 f"Max resolution has been set to {resolutions[resolutionSelection - 1]}"
             )
             settingsCLI()
-
     elif selection == 7:
+        presets = [
+            "ultrafast",
+            "superfast",
+            "veryfast",
+            "faster",
+            "fast",
+            "medium",
+            "slow",
+            "slower",
+            "veryslow",
+        ]
+        print("")
+        print("----------------------")
+        print("1) ultrafast")
+        print("2) superfast")
+        print("3) veryfast")
+        print("4) faster")
+        print("5) fast")
+        print("6) medium")
+        print("7) slow")
+        print("8) slower")
+        print("9) veryslow")
+        print("----------------------")
+        print("")
+        while True:
+            try:
+                presetSelection = int(input("Enter your selection: "))
+            except ValueError:
+                print("Please input a valid number")
+                continue
+            if presetSelection > 9 or presetSelection < 1:
+                print("Please input a valid number")
+                continue
+            break
+        if editPreset(presets[presetSelection - 1]):
+            print(f"Preset has been set to {presets[presetSelection - 1]}")
+            settingsCLI()
+    elif selection == 8:
         settings = getSettings()
         print("")
         print("----------------------")
@@ -888,11 +932,13 @@ def settingsCLI():
         print(f"Preferred Audio Codec: {settings[1]}")
         print(f"CRF: {settings[2]}")
         print(f"Hardware Acceleration: {settings[3]}")
+        print(f"Max Resolution: {settings[4]}")
+        print(f"Preset: {settings[5]}")
         print("----------------------")
         print("")
         input("Press enter to go back to settings")
         settingsCLI()
-    elif selection == 8:
+    elif selection == 9:
         mainMenu()
     else:
         print("Please input a valid number")

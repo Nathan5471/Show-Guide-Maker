@@ -450,6 +450,7 @@ def transcodeShow(
     CRF,
     hardwareAcceleration,
     maxResolution,
+    preset,
 ):
     if maxResolution != "None":
         if calculatePixelCount(getResolution(episodeLocation)) > calculatePixelCount(
@@ -480,19 +481,20 @@ def transcodeShow(
                 CRF,
                 hardwareAcceleration,
                 "None",
+                preset,
             )
     else:
         if hardwareAcceleration == "None":
             subprocess.run(
-                f'ffmpeg -i "{episodeLocation}" -c:v {video} -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
+                f'ffmpeg -i "{episodeLocation}" -c:v {video} -crf {CRF} -preset {preset} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
             )
         elif video == "copy":
             subprocess.run(
-                f'ffmpeg -hwaccel qsv -hwaccel_output_format qsv -i "{episodeLocation}" -c:v {video} -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
+                f'ffmpeg -hwaccel qsv -hwaccel_output_format qsv -i "{episodeLocation}" -c:v {video} -crf {CRF} -preset {preset} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
             )
         elif hardwareAcceleration == "qsv":
             subprocess.run(
-                f'ffmpeg -hwaccel qsv -hwaccel_output_format qsv -i "{episodeLocation}" -c:v {video}_qsv -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
+                f'ffmpeg -hwaccel qsv -hwaccel_output_format qsv -i "{episodeLocation}" -c:v {video}_qsv -crf {CRF} -preset {preset} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
             )
 
 
@@ -507,6 +509,7 @@ def transcodeShowHDR(
     CRF,
     hardwareAcceleration,
     maxResolution,
+    preset,
 ):
     if maxResolution != "None":
         if calculatePixelCount(getResolution(episodeLocation)) > calculatePixelCount(
@@ -517,7 +520,7 @@ def transcodeShowHDR(
                 hardwareAcceleration
             ):  # Will soon be change to if hardwareAccelartion == "None"
                 subprocess.run(
-                    f'ffmpeg -i "{episodeLocation}" -vf zscale=transfer=linear,tonemap=hable,zscale=transfer=bt709,scale={width}:{height},format=yuv420p -c:v {video} -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
+                    f'ffmpeg -i "{episodeLocation}" -vf zscale=transfer=linear,tonemap=hable,zscale=transfer=bt709,scale={width}:{height},format=yuv420p -c:v {video} -crf {CRF} -preset {preset} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
                 )
         else:
             transcodeShowHDR(
@@ -531,13 +534,14 @@ def transcodeShowHDR(
                 CRF,
                 hardwareAcceleration,
                 "None",
+                preset,
             )
     else:
         if (
             hardwareAcceleration
         ):  # Will soon be change to if hardwareAccelartion == "None"
             subprocess.run(
-                f'ffmpeg -i "{episodeLocation}" -vf zscale=transfer=linear,tonemap=hable,zscale=transfer=bt709,format=yuv420p -c:v {video} -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
+                f'ffmpeg -i "{episodeLocation}" -vf zscale=transfer=linear,tonemap=hable,zscale=transfer=bt709,format=yuv420p -c:v {video} -crf {CRF} -preset {preset} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
             )
 
 
@@ -552,6 +556,7 @@ def transcodeMovie(
     CRF,
     hardwareAcceleration,
     maxResolution,
+    preset,
 ):
     if maxResolution != "None":
         if calculatePixelCount(getResolution(movieLocation)) > calculatePixelCount(
@@ -560,15 +565,15 @@ def transcodeMovie(
             width, height = maxResolution.split("x")
             if hardwareAcceleration == "None":
                 subprocess.run(
-                    f'ffmpeg -i "{movieLocation}" -vf scale={width}:{height} -c:v {video} -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
+                    f'ffmpeg -i "{movieLocation}" -vf scale={width}:{height} -c:v {video} -crf {CRF} -preset {preset} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
                 )
             elif video == "copy":
                 subprocess.run(
-                    f'ffmpeg -hwaccel qsv -hwaccel_output_format qsv -i "{movieLocation}" -vf scale_qsv=w={width}:h={height} -c:v {video} -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
+                    f'ffmpeg -hwaccel qsv -hwaccel_output_format qsv -i "{movieLocation}" -vf scale_qsv=w={width}:h={height} -c:v {video} -crf {CRF} -preset {preset} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
                 )
             elif hardwareAcceleration == "qsv":
                 subprocess.run(
-                    f'ffmpeg -hwaccel qsv -hwaccel_output_format qsv -i "{movieLocation}" -vf scale_qsv=w={width}:h={height}:format=nv12 -c:v {video}_qsv -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
+                    f'ffmpeg -hwaccel qsv -hwaccel_output_format qsv -i "{movieLocation}" -vf scale_qsv=w={width}:h={height}:format=nv12 -c:v {video}_qsv -crf {CRF} -preset {preset} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
                 )
         else:
             transcodeMovie(
@@ -582,19 +587,20 @@ def transcodeMovie(
                 CRF,
                 hardwareAcceleration,
                 "None",
+                preset,
             )
     else:
         if hardwareAcceleration == "None":
             subprocess.run(
-                f'ffmpeg -i "{movieLocation}" -c:v {video} -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
+                f'ffmpeg -i "{movieLocation}" -c:v {video} -crf {CRF} -preset {preset} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
             )
         elif video == "copy":
             subprocess.run(
-                f'ffmpeg -hwaccel qsv -hwaccel_output_format qsv -i "{movieLocation}" -c:v {video} -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
+                f'ffmpeg -hwaccel qsv -hwaccel_output_format qsv -i "{movieLocation}" -c:v {video} -crf {CRF} -preset {preset} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
             )
         elif hardwareAcceleration == "qsv":
             subprocess.run(
-                f'ffmpeg -hwaccel qsv -hwaccel_output_format qsv -i "{movieLocation}" -vf scale_qsv=format=nv12:format=nv12 -c:v {video}_qsv -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
+                f'ffmpeg -hwaccel qsv -hwaccel_output_format qsv -i "{movieLocation}" -vf scale_qsv=format=nv12:format=nv12 -c:v {video}_qsv -crf {CRF} -preset {preset} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
             )
 
 
@@ -609,6 +615,7 @@ def transcodeMovieHDR(
     CRF,
     hardwareAcceleration,
     maxResolution,
+    preset,
 ):
     if maxResolution != "None":
         if calculatePixelCount(getResolution(movieLocation)) > calculatePixelCount(
@@ -619,7 +626,7 @@ def transcodeMovieHDR(
                 hardwareAcceleration
             ):  # Will soon be change to if hardwareAccelartion == "None"
                 subprocess.run(
-                    f'ffmpeg -i "{movieLocation}" -vf zscale=transfer=linear,tonemap=hable,zscale=transfer=bt709,scale={width}:{height},format=yuv420p -c:v {video} -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
+                    f'ffmpeg -i "{movieLocation}" -vf zscale=transfer=linear,tonemap=hable,zscale=transfer=bt709,scale={width}:{height},format=yuv420p -c:v {video} -crf {CRF} -preset {preset} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
                 )
         else:
             transcodeMovieHDR(
@@ -633,13 +640,14 @@ def transcodeMovieHDR(
                 CRF,
                 hardwareAcceleration,
                 "None",
+                preset,
             )
     else:
         if (
             hardwareAcceleration
         ):  # Will soon be change to if hardwareAccelartion == "None"
             subprocess.run(
-                f'ffmpeg -i "{movieLocation}" -vf zscale=transfer=linear,tonemap=hable,zscale=transfer=bt709,format=yuv420p -c:v {video} -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
+                f'ffmpeg -i "{movieLocation}" -vf zscale=transfer=linear,tonemap=hable,zscale=transfer=bt709,format=yuv420p -c:v {video} -crf {CRF} -preset {preset} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
             )
 
 
@@ -653,7 +661,7 @@ def generateSettings():
     settings = cursor.fetchall()
     if not settings:
         cursor.execute(
-            f"INSERT INTO settings(videoCodec, audioCodec, CRF, hardwareAcceleration, tonemapping, maxResolution, moviesPerRun) VALUES ('h264', 'aac', '23', 'None', 'True', 'None',0)"
+            f"INSERT INTO settings(videoCodec, audioCodec, CRF, hardwareAcceleration, tonemapping, maxResolution, preset, moviesPerRun) VALUES ('h264', 'aac', '23', 'None', 'True', 'None', 'fast', 0)"
         )
     connection.commit()
     connection.close()
@@ -721,6 +729,15 @@ def editMaxResolution(maxResolution):
     cursor.execute(
         f"UPDATE settings SET maxResolution = '{maxResolution}' WHERE ROWID = 1"
     )
+    connection.commit()
+    connection.close()
+    return True
+
+
+def editPreset(preset):
+    connection = sqlite3.connect("shows.db")
+    cursor = connection.cursor()
+    cursor.execute(f"UPDATE settings SET preset = '{preset}' WHERE ROWID = 1")
     connection.commit()
     connection.close()
     return True
