@@ -392,7 +392,7 @@ def getDriveLocations():
 def detectHDR(videoLocation):
     ffprobeOutput = subprocess.check_output(
         [
-            "ffprobe",
+            r"C:\Program Files\Show Playlist Maker\FFmpeg\ffprobe.exe",
             "-i",
             videoLocation,
             "-show_entries",
@@ -417,7 +417,7 @@ def detectHDR(videoLocation):
 def getResolution(videoLocation):
     ffprobeOutput = subprocess.check_output(
         [
-            "ffprobe",
+            r"C:\Program Files\Show Playlist Maker\FFmpeg\ffprobe.exe",
             "-v",
             "quiet",
             "-select_streams",
@@ -459,15 +459,68 @@ def transcodeShow(
             width, height = maxResolution.split("x")
             if hardwareAcceleration == "None":
                 subprocess.run(
-                    f'ffmpeg -i "{episodeLocation}" -vf scale={width}:{height} -c:v {video} -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
+                    [
+                        r"C:\Program Files\Show Playlist Maker\FFmpeg\ffmpeg.exe",
+                        "-i",
+                        episodeLocation,
+                        "-vf",
+                        f"scale={width}:{height}",
+                        "-c:v",
+                        video,
+                        "-crf",
+                        CRF,
+                        "-preset",
+                        preset,
+                        "-c:a",
+                        audio,
+                        f"{destination}/{fileNumber} - {showName} {episode}",
+                    ]
                 )
             elif video == "copy":
                 subprocess.run(
-                    f'ffmpeg -hwaccel qsv -hwaccel_output_format qsv -i "{episodeLocation}" -vf scale_qsv=w={width}:h={height} -c:v {video} -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
+                    [
+                        r"C:\Program Files\Show Playlist Maker\FFmpeg\ffmpeg.exe",
+                        "-hwaccel",
+                        "qsv",
+                        "-hwaccel_output_format",
+                        "qsv",
+                        "-i",
+                        episodeLocation,
+                        "-vf",
+                        f"scale_qsv=w={width}:h={height}",
+                        "-c:v",
+                        video,
+                        "-crf",
+                        CRF,
+                        "-preset",
+                        preset,
+                        "-c:a",
+                        audio,
+                        f"{destination}/{fileNumber} - {showName} {episode}",
+                    ]
                 )
             elif hardwareAcceleration == "qsv":
                 subprocess.run(
-                    f'ffmpeg -hwaccel qsv -hwaccel_output_format qsv -i "{episodeLocation}" -vf scale_qsv=w={width}:h={height} -c:v {video}_qsv -crf {CRF} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
+                    [
+                        r"C:\Program Files\Show Playlist Maker\FFmpeg\ffmpeg.exe",
+                        "-hwaccel",
+                        "qsv",
+                        "-hwaccel_output_format",
+                        "qsv",
+                        "-i",
+                        episodeLocation,
+                        "-vf",
+                        f"scale_qsv=w={width}:h={height}",
+                        "-c:v",
+                        f"{video}_qsv",
+                        "-crf",
+                        CRF,
+                        "-preset",
+                        preset,
+                        "-c:a",
+                        audio,
+                        f"{destination}/{fileNumber} - {showName} {episode}",
+                    ]
                 )
         else:
             transcodeShow(
@@ -486,15 +539,64 @@ def transcodeShow(
     else:
         if hardwareAcceleration == "None":
             subprocess.run(
-                f'ffmpeg -i "{episodeLocation}" -c:v {video} -crf {CRF} -preset {preset} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
+                [
+                    r"C:\Program Files\Show Playlist Maker\FFmpeg\ffmpeg.exe",
+                    "-i",
+                    episodeLocation,
+                    "-c:v",
+                    video,
+                    "-crf",
+                    CRF,
+                    "-preset",
+                    preset,
+                    "-c:a",
+                    audio,
+                    f"{destination}/{fileNumber} - {showName} {episode}",
+                ]
             )
         elif video == "copy":
             subprocess.run(
-                f'ffmpeg -hwaccel qsv -hwaccel_output_format qsv -i "{episodeLocation}" -c:v {video} -crf {CRF} -preset {preset} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
+                [
+                    r"C:\Program Files\Show Playlist Maker\FFmpeg\ffmpeg.exe",
+                    "-hwaccel",
+                    "qsv",
+                    "-hwaccel_output_format",
+                    "qsv",
+                    "-i",
+                    episodeLocation,
+                    "-c:v",
+                    video,
+                    "-crf",
+                    CRF,
+                    "-preset",
+                    preset,
+                    "-preset",
+                    preset,
+                    "-c:a",
+                    audio,
+                    f"{destination}/{fileNumber} - {showName} {episode}",
+                ]
             )
         elif hardwareAcceleration == "qsv":
             subprocess.run(
-                f'ffmpeg -hwaccel qsv -hwaccel_output_format qsv -i "{episodeLocation}" -c:v {video}_qsv -crf {CRF} -preset {preset} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
+                [
+                    r"C:\Program Files\Show Playlist Maker\FFmpeg\ffmpeg.exe",
+                    "-hwaccel",
+                    "qsv",
+                    "-hwaccel_output_format",
+                    "qsv",
+                    "-i",
+                    episodeLocation,
+                    "-c:v",
+                    f"{video}_qsv",
+                    "-crf",
+                    CRF,
+                    "-preset",
+                    preset,
+                    "-c:a",
+                    audio,
+                    f"{destination}/{fileNumber} - {showName} {episode}",
+                ]
             )
 
 
@@ -520,7 +622,22 @@ def transcodeShowHDR(
                 hardwareAcceleration
             ):  # Will soon be change to if hardwareAccelartion == "None"
                 subprocess.run(
-                    f'ffmpeg -i "{episodeLocation}" -vf zscale=transfer=linear,tonemap=hable,zscale=transfer=bt709,scale={width}:{height},format=yuv420p -c:v {video} -crf {CRF} -preset {preset} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
+                    [
+                        r"C:\Program Files\Show Playlist Maker\FFmpeg\ffmpeg.exe",
+                        "-i",
+                        episodeLocation,
+                        "-vf",
+                        f"zscale=transfer=linear,tonemap=hable,zscale=transfer=bt709,scale={width}:{height},format=yuv420p",
+                        "-c:v",
+                        video,
+                        "-crf",
+                        CRF,
+                        "-preset",
+                        preset,
+                        "-c:a",
+                        audio,
+                        f"{destination}/{fileNumber} - {showName} {episode}",
+                    ]
                 )
         else:
             transcodeShowHDR(
@@ -541,7 +658,22 @@ def transcodeShowHDR(
             hardwareAcceleration
         ):  # Will soon be change to if hardwareAccelartion == "None"
             subprocess.run(
-                f'ffmpeg -i "{episodeLocation}" -vf zscale=transfer=linear,tonemap=hable,zscale=transfer=bt709,format=yuv420p -c:v {video} -crf {CRF} -preset {preset} -c:a {audio} "{destination}/{fileNumber} - {showName} {episode}"'
+                [
+                    r"C:\Program Files\Show Playlist Maker\FFmpeg\ffmpeg.exe",
+                    "-i",
+                    episodeLocation,
+                    "-vf",
+                    "zscale=transfer=linear,tonemap=hable,zscale=transfer=bt709,format=yuv420p",
+                    "-c:v",
+                    video,
+                    "-crf",
+                    CRF,
+                    "-preset",
+                    preset,
+                    "-c:a",
+                    audio,
+                    f"{destination}/{fileNumber} - {showName} {episode}",
+                ]
             )
 
 
@@ -565,15 +697,68 @@ def transcodeMovie(
             width, height = maxResolution.split("x")
             if hardwareAcceleration == "None":
                 subprocess.run(
-                    f'ffmpeg -i "{movieLocation}" -vf scale={width}:{height} -c:v {video} -crf {CRF} -preset {preset} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
+                    [
+                        r"C:\Program Files\Show Playlist Maker\FFmpeg\ffmpeg.exe",
+                        "-i",
+                        movieLocation,
+                        "-vf",
+                        f"scale={width}:{height}",
+                        "-c:v",
+                        video,
+                        "-crf",
+                        CRF,
+                        "-preset",
+                        preset,
+                        "-c:a",
+                        audio,
+                        f"{destination}/{fileNumber} - {movieName}.{fileExtension}",
+                    ]
                 )
             elif video == "copy":
                 subprocess.run(
-                    f'ffmpeg -hwaccel qsv -hwaccel_output_format qsv -i "{movieLocation}" -vf scale_qsv=w={width}:h={height} -c:v {video} -crf {CRF} -preset {preset} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
+                    [
+                        r"C:\Program Files\Show Playlist Maker\FFmpeg\ffmpeg.exe",
+                        "-hwaccel",
+                        "qsv",
+                        "-hwaccel_output_format",
+                        "qsv",
+                        "-i",
+                        movieLocation,
+                        "-vf",
+                        f"scale_qsv=w={width}:h={height}",
+                        "-c:v",
+                        video,
+                        "-crf",
+                        CRF,
+                        "-preset",
+                        preset,
+                        "-c:a",
+                        audio,
+                        f"{destination}/{fileNumber} - {movieName}.{fileExtension}",
+                    ]
                 )
             elif hardwareAcceleration == "qsv":
                 subprocess.run(
-                    f'ffmpeg -hwaccel qsv -hwaccel_output_format qsv -i "{movieLocation}" -vf scale_qsv=w={width}:h={height}:format=nv12 -c:v {video}_qsv -crf {CRF} -preset {preset} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
+                    [
+                        r"C:\Program Files\Show Playlist Maker\FFmpeg\ffmpeg.exe",
+                        "-hwaccel",
+                        "qsv",
+                        "-hwaccel_output_format",
+                        "qsv",
+                        "-i",
+                        movieLocation,
+                        "-vf",
+                        f"scale_qsv=w={width}:h={height}:format=nv12",
+                        "-c:v",
+                        f"{video}_qsv",
+                        "-crf",
+                        CRF,
+                        "-preset",
+                        preset,
+                        "-c:a",
+                        audio,
+                        f"{destination}/{fileNumber} - {movieName}.{fileExtension}",
+                    ]
                 )
         else:
             transcodeMovie(
@@ -592,15 +777,64 @@ def transcodeMovie(
     else:
         if hardwareAcceleration == "None":
             subprocess.run(
-                f'ffmpeg -i "{movieLocation}" -c:v {video} -crf {CRF} -preset {preset} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
+                [
+                    r"C:\Program Files\Show Playlist Maker\FFmpeg\ffmpeg.exe",
+                    "-i",
+                    movieLocation,
+                    "-c:v",
+                    video,
+                    "-crf",
+                    CRF,
+                    "-preset",
+                    preset,
+                    "-c:a",
+                    audio,
+                    f"{destination}/{fileNumber} - {movieName}.{fileExtension}",
+                ]
             )
         elif video == "copy":
             subprocess.run(
-                f'ffmpeg -hwaccel qsv -hwaccel_output_format qsv -i "{movieLocation}" -c:v {video} -crf {CRF} -preset {preset} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
+                [
+                    r"C:\Program Files\Show Playlist Maker\FFmpeg\ffmpeg.exe",
+                    "-hwaccel",
+                    "qsv",
+                    "-hwaccel_output_format",
+                    "qsv",
+                    "-i",
+                    movieLocation,
+                    "-c:v",
+                    video,
+                    "-crf",
+                    CRF,
+                    "-preset",
+                    preset,
+                    "-c:a",
+                    audio,
+                    f"{destination}/{fileNumber} - {movieName}.{fileExtension}",
+                ]
             )
         elif hardwareAcceleration == "qsv":
             subprocess.run(
-                f'ffmpeg -hwaccel qsv -hwaccel_output_format qsv -i "{movieLocation}" -vf scale_qsv=format=nv12:format=nv12 -c:v {video}_qsv -crf {CRF} -preset {preset} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
+                [
+                    r"C:\Program Files\Show Playlist Maker\FFmpeg\ffmpeg.exe",
+                    "-hwaccel",
+                    "qsv",
+                    "-hwaccel_output_format",
+                    "qsv",
+                    "-i",
+                    movieLocation,
+                    "-vf",
+                    "scale_qsv=format=nv12",
+                    "-c:v",
+                    f"{video}_qsv",
+                    "-crf",
+                    CRF,
+                    "-preset",
+                    preset,
+                    "-c:a",
+                    audio,
+                    f"{destination}/{fileNumber} - {movieName}.{fileExtension}",
+                ]
             )
 
 
@@ -626,7 +860,22 @@ def transcodeMovieHDR(
                 hardwareAcceleration
             ):  # Will soon be change to if hardwareAccelartion == "None"
                 subprocess.run(
-                    f'ffmpeg -i "{movieLocation}" -vf zscale=transfer=linear,tonemap=hable,zscale=transfer=bt709,scale={width}:{height},format=yuv420p -c:v {video} -crf {CRF} -preset {preset} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
+                    [
+                        r"C:\Program Files\Show Playlist Maker\FFmpeg\ffmpeg.exe",
+                        "-i",
+                        movieLocation,
+                        "-vf",
+                        f"zscale=transfer=linear,tonemap=hable,zscale=transfer=bt709,scale={width}:{height},format=yuv420p",
+                        "-c:v",
+                        video,
+                        "-crf",
+                        CRF,
+                        "-preset",
+                        preset,
+                        "-c:a",
+                        audio,
+                        f"{destination}/{fileNumber} - {movieName}.{fileExtension}",
+                    ]
                 )
         else:
             transcodeMovieHDR(
@@ -647,7 +896,22 @@ def transcodeMovieHDR(
             hardwareAcceleration
         ):  # Will soon be change to if hardwareAccelartion == "None"
             subprocess.run(
-                f'ffmpeg -i "{movieLocation}" -vf zscale=transfer=linear,tonemap=hable,zscale=transfer=bt709,format=yuv420p -c:v {video} -crf {CRF} -preset {preset} -c:a {audio} "{destination}/{fileNumber} - {movieName}.{fileExtension}"'
+                [
+                    r"C:\Program Files\Show Playlist Maker\FFmpeg\ffmpeg.exe",
+                    "-i",
+                    movieLocation,
+                    "-vf",
+                    "zscale=transfer=linear,tonemap=hable,zscale=transfer=bt709,format=yuv420p",
+                    "-c:v",
+                    video,
+                    "-crf",
+                    CRF,
+                    "-preset",
+                    preset,
+                    "-c:a",
+                    audio,
+                    f"{destination}/{fileNumber} - {movieName}.{fileExtension}",
+                ]
             )
 
 

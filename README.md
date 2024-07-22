@@ -4,8 +4,9 @@ This show playlist maker copies files an makes it switch through different shows
 
 ## Installation and running
 
-1.Install ffmpeg (https://ffmpeg.org/download.html) \
-3.Clone the repo and run showPlaylistMaker.py
+1. Install Jellyfin's FFmpeg (https://github.com/jellyfin/jellyfin-ffmpeg)
+2. Move the contents of the folder to "C:\Program Files\Show Playlist Maker\FFmpeg" (You will need to create this)
+3. Clone the repo and run showPlaylistMakerCLI.py
 
 ## Storing your files
 
